@@ -70,7 +70,7 @@ class Atm:
         self.withdraw = Button(self.frame,text='Withdrawal',bg='#1f1c2c',fg='white',font=('Courier',10,'bold'),command=self.withdraw)
 
         self.last = Button(self.frame,text='Last Transaction',bg='#1f1c2c',fg='white',font=('Courier',8,'bold'))
-        self.changePin = Button(self.frame,text='Change Pin',bg='#1f1c2c',fg='white',font=('Courier',8,'bold'))
+        self.changePin = Button(self.frame,text='Change Pin',bg='#1f1c2c',fg='white',font=('Courier',8,'bold'),command=self.change)
 
         self.quit = Button(self.frame, text='Quit', bg='#1f1c2c', fg='white', font=('Courier', 10, 'bold'),command=self.main.destroy)
 
@@ -124,9 +124,59 @@ class Atm:
         self.conn.execute('Update atm set balance = balance-? where acc_no=?', (self.amount.get(), self.ac))
         self.conn.commit()
 
+    def change(self):
+        self.label = Label(self.frame,text='Change PIN',font=('Courier', 10, 'bold'))
+        self.old = Entry(self.frame, bg='#FFFFFF', highlightcolor="#50A8B0", highlightthickness=2, highlightbackground="white")
+        self.new = Entry(self.frame, bg='#FFFFFF', highlightcolor="#50A8B0", highlightthickness=2, highlightbackground="white")
+        self.confirm = Entry(self.frame, bg='#FFFFFF', highlightcolor="#50A8B0", highlightthickness=2, highlightbackground="white")
+        self.submit2 = Button(self.frame, text='Change', bg='#1f1c2c', fg='white', font=('Courier', 10, 'bold'))
 
+        self.old.insert(0, 'Old password')
+        self.old.bind('<FocusIn>',self.on_entry_click)
+        self.new.insert(0, 'New password')
+        self.new.bind('<FocusIn>', self.on_entry_click2)
+        self.confirm.insert(0, 'Confirm password')
+        self.confirm.bind('<FocusIn>', self.on_entry_click3)
+        self.submit2.bind('<Button-1>',self.change_req)
 
+        self.label.place(x=200, y=180, width=300, height=100)
+        self.old.place(x=230, y=300, width=180, height=20)
+        self.new.place(x=230, y=330, width=180, height=20)
+        self.confirm.place(x=230, y=360, width=180, height=20)
+        self.submit2.place(x=230, y=390, width=180, height=20)
 
+    def change_req(self,flag):
+        self.fetch()
+        self.details = self.conn.execute('Select name, password, acc_no, type, balance from atm where acc_no = ?',(self.ac,))
+        for i in self.details:
+            p = i[1]
+        if self.old.get() == p :
+            if self.new.get() == self.confirm.get():
+                self.label = Label(self.frame,text='Updated Pin',font=('Courier', 10, 'bold'))
+                self.label.place(x=200, y=180, width=300, height=100)
+                self.conn.execute('Update atm set password = ? where acc_no=?', (self.new.get(), self.ac))
+                self.conn.commit()
+
+    def on_entry_click(self,event):
+        self.entry = True
+        if self.entry:
+            self.entry = False
+            self.old.delete(0,'end')
+            self.old.insert(0,'')
+
+    def on_entry_click2(self,event):
+        self.entry = True
+        if self.entry:
+            self.entry = False
+            self.new.delete(0,'end')
+            self.new.insert(0,'')
+
+    def on_entry_click3(self,event):
+        self.entry = True
+        if self.entry:
+            self.entry = False
+            self.confirm.delete(0,'end')
+            self.confirm.insert(0,'')
 
 
 main = Tk()
