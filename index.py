@@ -62,26 +62,67 @@ class Atm:
                 messagebox._show("Login Info!", m)
 
     def menu(self):
-        self.frame = Frame(self.main,bg='#2193b0',width=600,height=500)
-        main.geometry('600x500')
-        self.user_info = Button(self.frame,text='Account Info',bg='#1f1c2c',fg='white',font=('Courier',30,'bold'),command=self.account_details)
-        self.balance_enquiry = Button(self.frame,text='Balance Enquiry',bg='#1f1c2c',fg='white',font=('Courier',30,'bold'),command=check)
-        self.deposit = Button(self.frame,text='Deposit',bg='#1f1c2c',fg='white',font=('Courier',30,'bold'),command=deposit)
-        self.withdraw = Button(self.frame,text='Withdrawal',bg='#1f1c2c',fg='white',font=('Courier',30,'bold'),command=withdraw)
-        self.quit = Button(self.frame, text='Quit', bg='#1f1c2c', fg='white', font=('Courier', 20, 'bold'),command=self.main.destroy)
+        self.frame = Frame(self.main,bg='#2193b0',width=650 ,height=600)
+        main.geometry('800x600')
+        self.user_info = Button(self.frame,text='Account Info',bg='#1f1c2c',fg='white',font=('Courier',10,'bold'),command=self.account_details)
+        self.balance_enquiry = Button(self.frame,text='Balance Enquiry',bg='#1f1c2c',fg='white',font=('Courier',10,'bold'),command=self.check)
+        self.deposit = Button(self.frame,text='Deposit',bg='#1f1c2c',fg='white',font=('Courier',10,'bold'),command=self.deposit)
+        self.withdraw = Button(self.frame,text='Withdrawal',bg='#1f1c2c',fg='white',font=('Courier',10,'bold'),command=self.withdraw)
 
-        self.user_info.place(x=0,y=0,width=150,height=50)
-        self.balance_enquiry.place(x=0,y=450,width=150,height=50)
-        self.deposit.place(x=450,y=0,width=150,height=50)
-        self.withdraw.place(x=450,y=450,width=150,height=50)
-        self.quit.place(x=250,y=470,width=100,height=30)
+        self.last = Button(self.frame,text='Last Transaction',bg='#1f1c2c',fg='white',font=('Courier',8,'bold'))
+        self.changePin = Button(self.frame,text='Change Pin',bg='#1f1c2c',fg='white',font=('Courier',8,'bold'))
+
+        self.quit = Button(self.frame, text='Quit', bg='#1f1c2c', fg='white', font=('Courier', 10, 'bold'),command=self.main.destroy)
+
+        self.user_info.place(x=0,y=0,width=200,height=50)
+        self.balance_enquiry.place(x=0,y=450,width=200,height=50)
+        self.deposit.place(x=450,y=0,width=200,height=50)
+        self.withdraw.place(x=450,y=450,width=200,height=50)
+        self.last.place(x=0,y=240,width=130,height=50)
+        self.changePin.place(x=530, y=240, width=130, height=50)
+        self.quit.place(x=270,y=470,width=100,height=30)
         self.frame.pack()
 
     def account_details(self):
         self.fetch()
         display = self.list[0]+'\n'+self.list[1]+'\n'+self.list[2]
         self.label = Label(self.frame, text=display, font=('Courier',20,'bold'))
-        self.label.place(x=250, y=200, width=300, height=100)
+        self.label.place(x=200, y=180, width=300, height=100)
+
+    def check(self):
+        self.fetch()
+        b = self.list[3]
+        self.label = Label(self.frame, text=b, font=('Courier',20,'bold'))
+        self.label.place(x=200, y=180, width=300, height=100)
+
+    def deposit(self):
+        self.amount = Entry(self.frame,bg='#FFFFFF',highlightcolor="#50A8B0", highlightthickness=2, highlightbackground="white")
+        self.submitButton = Button(self.frame,text='Submit',bg='#1f1c2c',fg='white',font=('Courier',10,'bold'))
+
+        self.amount.place(x=220,y=300,width=180,height=20)
+        self.submitButton.place(x=420,y=300,width=100,height=20)
+        self.submitButton.bind("<Button-1>",self.deposit_trans)
+
+    def deposit_trans(self,flag):
+        self.label = Label(self.frame,text='Transaction successfull!',font=('Courier',10,'bold'))
+        self.label.place(x=200, y=180, width=300, height=100)
+        self.conn.execute('Update atm set balance = balance+? where acc_no=?',(self.amount.get(),self.ac))
+        self.conn.commit()
+
+    def withdraw(self):
+        self.amount = Entry(self.frame, bg='#FFFFFF', highlightcolor="#50A8B0", highlightthickness=2,
+                            highlightbackground="white")
+        self.submitButton = Button(self.frame, text='Submit', bg='#1f1c2c', fg='white', font=('Courier', 10, 'bold'))
+
+        self.amount.place(x=220, y=300, width=180, height=20)
+        self.submitButton.place(x=420, y=300, width=100, height=20)
+        self.submitButton.bind("<Button-1>", self.with_trans)
+
+    def with_trans(self,flag):
+        self.label = Label(self.frame, text='Transaction successfull!', font=('Courier', 10, 'bold'))
+        self.label.place(x=200, y=180, width=300, height=100)
+        self.conn.execute('Update atm set balance = balance-? where acc_no=?', (self.amount.get(), self.ac))
+        self.conn.commit()
 
 
 
