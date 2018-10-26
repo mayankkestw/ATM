@@ -69,7 +69,7 @@ class Atm:
         self.deposit = Button(self.frame,text='Deposit',bg='#1f1c2c',fg='white',font=('Courier',10,'bold'),command=self.deposit)
         self.withdraw = Button(self.frame,text='Withdrawal',bg='#1f1c2c',fg='white',font=('Courier',10,'bold'),command=self.withdraw)
 
-        self.last = Button(self.frame,text='Last Transaction',bg='#1f1c2c',fg='white',font=('Courier',8,'bold'))
+        self.last = Button(self.frame,text='Last Transaction',bg='#1f1c2c',fg='white',font=('Courier',8,'bold'),command=self.history)
         self.changePin = Button(self.frame,text='Change Pin',bg='#1f1c2c',fg='white',font=('Courier',8,'bold'),command=self.change)
 
         self.quit = Button(self.frame, text='Quit', bg='#1f1c2c', fg='white', font=('Courier', 10, 'bold'),command=self.main.destroy)
@@ -108,6 +108,14 @@ class Atm:
         self.label.place(x=200, y=180, width=300, height=100)
         self.conn.execute('Update atm set balance = balance+? where acc_no=?',(self.amount.get(),self.ac))
         self.conn.commit()
+        self.write_deposit()
+        print(self.last_deposit)
+
+    def write_deposit(self):
+        self.last_deposit = 'An amount of Rs.{} is deposited in {}'.format(self.amount.get(), self.list[1])
+        f = open('last.txt', 'w')
+        f.write(self.last_deposit)
+        f.close()
 
     def withdraw(self):
         self.amount = Entry(self.frame, bg='#FFFFFF', highlightcolor="#50A8B0", highlightthickness=2,
@@ -119,10 +127,18 @@ class Atm:
         self.submitButton.bind("<Button-1>", self.with_trans)
 
     def with_trans(self,flag):
+        time.sleep()
         self.label = Label(self.frame, text='Transaction successfull!', font=('Courier', 10, 'bold'))
         self.label.place(x=200, y=180, width=300, height=100)
         self.conn.execute('Update atm set balance = balance-? where acc_no=?', (self.amount.get(), self.ac))
         self.conn.commit()
+        self.last_with()
+
+    def last_with(self):
+        self.last_withdraw = 'An amount of Rs.{} is withdraw in {}'.format(self.amount.get(), self.list[1])
+        f = open('last.txt', 'w')
+        f.write(self.last_withdraw)
+        f.close()
 
     def change(self):
         self.label = Label(self.frame,text='Change PIN',font=('Courier', 10, 'bold'))
@@ -178,6 +194,12 @@ class Atm:
             self.confirm.delete(0,'end')
             self.confirm.insert(0,'')
 
+    def history(self):
+        f = open('last.txt','r')
+        self.hist = f.readlines()
+        f.close()
+        self.label = Label(self.frame, text=self.hist, font=('Courier', 7, 'bold'))
+        self.label.place(x=200, y=180, width=300, height=100)
 
 main = Tk()
 main.title('MGA-Bank')
