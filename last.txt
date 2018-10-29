@@ -1,1 +1,1 @@
-An amount of Rs.2000 is deposited in Account no = 1234
+An amount of Rs.10000 is deposited in Account no = 12345

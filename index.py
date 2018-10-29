@@ -16,7 +16,7 @@ class Atm:
         self.account = Label(self.frame,text='Account Number',bg="#728B8E",fg="white",font=Courier)
         self.accountEntry = Entry(self.frame,bg='#FFFFFF',highlightcolor="#50A8B0", highlightthickness=2, highlightbackground="white")
         self.pin = Label(self.frame,text='Pin',bg="#728B8E",fg="white",font=Courier)
-        self.pinEntry = Entry(self.frame,bg='#FFFFFF',highlightcolor="#50A8B0", highlightthickness=2, highlightbackground="white")
+        self.pinEntry = Entry(self.frame,show='*',bg='#FFFFFF',highlightcolor="#50A8B0", highlightthickness=2, highlightbackground="white")
         self.button = Button(self.frame,text='Login',bg='#1f1c2c',fg='white',font=('Courier',20,'bold'),command=self.validate)
         self.quit = Button(self.frame,text='Quit',bg='#1f1c2c',fg='white',font=('Courier',20,'bold'),command=self.main.destroy)
 
@@ -36,11 +36,11 @@ class Atm:
             self.list.append('Account no = {}'.format(i[2]))
             self.list.append('Type = {}'.format(i[3]))
             self.ac = i[2]
-            self.list.append('Balance = {}'.format(i[4]))
+            self.list.append('Balance = Rs.{}'.format(i[4]))
 
     def validate(self):
         ac = False
-        self.details = self.conn.execute('Select name, password, acc_no, type, balance from atm where acc_no = ?',(int(self.accountEntry.get()),))
+        self.details = self.conn.execute('Select name, password, acc_no, type, balance from atm where acc_no = ?',(self.accountEntry.get(),))
         for i in self.details:
             self.ac = i[2]
             if i[2] == self.accountEntry.get():
@@ -54,7 +54,7 @@ class Atm:
                 self.menu()
             else:
                 ac = True
-                m = " Login UnSucessFull ! Wrong Password"
+                m = " Login UnsucessFull ! Wrong Password"
                 messagebox._show("Login Info!", m)
 
             if not ac:
@@ -84,32 +84,43 @@ class Atm:
         self.frame.pack()
 
     def account_details(self):
+        self.entries()
+        self.remove_change_pin()
         self.fetch()
         display = self.list[0]+'\n'+self.list[1]+'\n'+self.list[2]
         self.label = Label(self.frame, text=display, font=('Courier',20,'bold'))
-        self.label.place(x=200, y=180, width=300, height=100)
+        self.label.place(x=180, y=180, width=300, height=100)
 
     def check(self):
+        self.entries()
+        self.remove_change_pin()
         self.fetch()
         b = self.list[3]
         self.label = Label(self.frame, text=b, font=('Courier',20,'bold'))
-        self.label.place(x=200, y=180, width=300, height=100)
+        self.label.place(x=180, y=180, width=300, height=100)
 
     def deposit(self):
+        self.remove_change_pin()
+        self.label = Label(self.frame, text='Enter amount to deposit', font=('Courier', 10, 'bold'))
+        self.label.place(x=180, y=180, width=300, height=100)
         self.amount = Entry(self.frame,bg='#FFFFFF',highlightcolor="#50A8B0", highlightthickness=2, highlightbackground="white")
         self.submitButton = Button(self.frame,text='Submit',bg='#1f1c2c',fg='white',font=('Courier',10,'bold'))
 
-        self.amount.place(x=220,y=300,width=180,height=20)
-        self.submitButton.place(x=420,y=300,width=100,height=20)
-        self.submitButton.bind("<Button-1>",self.deposit_trans)
+        self.amount.place(x=195,y=300,width=160,height=20)
+        self.submitButton.place(x=365,y=300,width=100,height=20)
+        self.submitButton.bind("<ButtonRelease-1>",self.deposit_trans)
 
     def deposit_trans(self,flag):
-        self.label = Label(self.frame,text='Transaction successfull!',font=('Courier',10,'bold'))
-        self.label.place(x=200, y=180, width=300, height=100)
-        self.conn.execute('Update atm set balance = balance+? where acc_no=?',(self.amount.get(),self.ac))
-        self.conn.commit()
-        self.write_deposit()
-        print(self.last_deposit)
+        if(self.amount.get()==''):
+            d = 'Enter amount'
+            messagebox._show('Transaction Error',d)
+        else:
+            self.label = Label(self.frame,text='Transaction successfull!',font=('Courier',10,'bold'))
+            self.label.place(x=180, y=180, width=300, height=100)
+            self.conn.execute('Update atm set balance = balance+? where acc_no=?',(self.amount.get(),self.ac))
+            self.conn.commit()
+            self.write_deposit()
+            self.entries()
 
     def write_deposit(self):
         self.last_deposit = 'An amount of Rs.{} is deposited in {}'.format(self.amount.get(), self.list[1])
@@ -118,21 +129,29 @@ class Atm:
         f.close()
 
     def withdraw(self):
+        self.remove_change_pin()
+        self.label = Label(self.frame, text='Enter amount to Withdraw', font=('Courier', 10, 'bold'))
+        self.label.place(x=180, y=180, width=300, height=100)
         self.amount = Entry(self.frame, bg='#FFFFFF', highlightcolor="#50A8B0", highlightthickness=2,
                             highlightbackground="white")
         self.submitButton = Button(self.frame, text='Submit', bg='#1f1c2c', fg='white', font=('Courier', 10, 'bold'))
 
-        self.amount.place(x=220, y=300, width=180, height=20)
-        self.submitButton.place(x=420, y=300, width=100, height=20)
-        self.submitButton.bind("<Button-1>", self.with_trans)
+        self.amount.place(x=195, y=300, width=160, height=20)
+        self.submitButton.place(x=365, y=300, width=100, height=20)
+        self.submitButton.bind("<ButtonRelease-1>", self.with_trans)
 
     def with_trans(self,flag):
-        time.sleep()
-        self.label = Label(self.frame, text='Transaction successfull!', font=('Courier', 10, 'bold'))
-        self.label.place(x=200, y=180, width=300, height=100)
-        self.conn.execute('Update atm set balance = balance-? where acc_no=?', (self.amount.get(), self.ac))
-        self.conn.commit()
-        self.last_with()
+        if (self.amount.get() == ''):
+            d = 'Enter amount'
+            messagebox._show('Transaction Error', d)
+        else:
+            self.label = Label(self.frame, text='Transaction successfull!', font=('Courier', 10, 'bold'))
+            self.label.place(x=180, y=180, width=300, height=100)
+            self.conn.execute('Update atm set balance = balance-? where acc_no=?', (self.amount.get(), self.ac))
+            self.conn.commit()
+            self.last_with()
+            self.entries()
+
 
     def last_with(self):
         self.last_withdraw = 'An amount of Rs.{} is withdraw in {}'.format(self.amount.get(), self.list[1])
@@ -141,6 +160,7 @@ class Atm:
         f.close()
 
     def change(self):
+        self.entries()
         self.label = Label(self.frame,text='Change PIN',font=('Courier', 10, 'bold'))
         self.old = Entry(self.frame, bg='#FFFFFF', highlightcolor="#50A8B0", highlightthickness=2, highlightbackground="white")
         self.new = Entry(self.frame, bg='#FFFFFF', highlightcolor="#50A8B0", highlightthickness=2, highlightbackground="white")
@@ -155,23 +175,29 @@ class Atm:
         self.confirm.bind('<FocusIn>', self.on_entry_click3)
         self.submit2.bind('<Button-1>',self.change_req)
 
-        self.label.place(x=200, y=180, width=300, height=100)
+        self.label.place(x=180, y=180, width=300, height=100)
         self.old.place(x=230, y=300, width=180, height=20)
         self.new.place(x=230, y=330, width=180, height=20)
         self.confirm.place(x=230, y=360, width=180, height=20)
         self.submit2.place(x=230, y=390, width=180, height=20)
 
     def change_req(self,flag):
-        self.fetch()
-        self.details = self.conn.execute('Select name, password, acc_no, type, balance from atm where acc_no = ?',(self.ac,))
-        for i in self.details:
-            p = i[1]
-        if self.old.get() == p :
-            if self.new.get() == self.confirm.get():
-                self.label = Label(self.frame,text='Updated Pin',font=('Courier', 10, 'bold'))
-                self.label.place(x=200, y=180, width=300, height=100)
-                self.conn.execute('Update atm set password = ? where acc_no=?', (self.new.get(), self.ac))
-                self.conn.commit()
+        if(self.old.get()=='' or self.new.get()=='' or self.confirm.get()==''):
+            messagebox._show('Failed','Kindly fill all the details')
+        else:
+            self.fetch()
+            self.details = self.conn.execute('Select name, password, acc_no, type, balance from atm where acc_no = ?',(self.ac,))
+            for i in self.details:
+                p = i[1]
+            if self.old.get() == p :
+                if self.new.get() == self.confirm.get():
+                    self.label = Label(self.frame,text='Updated Pin',font=('Courier', 10, 'bold'))
+                    self.label.place(x=180, y=180, width=300, height=100)
+                    self.conn.execute('Update atm set password = ? where acc_no=?', (self.new.get(), self.ac))
+                    self.conn.commit()
+                    self.remove_change_pin()
+                    messagebox._show('Restart','Re-open your id')
+                    main.destroy()
 
     def on_entry_click(self,event):
         self.entry = True
@@ -195,15 +221,42 @@ class Atm:
             self.confirm.insert(0,'')
 
     def history(self):
+        self.entries()
+        self.remove_change_pin()
         f = open('last.txt','r')
         self.hist = f.readlines()
         f.close()
         self.label = Label(self.frame, text=self.hist, font=('Courier', 7, 'bold'))
-        self.label.place(x=200, y=180, width=300, height=100)
+        self.label.place(x=180, y=180, width=300, height=100)
+
+    def entries(self):
+        try:
+            self.amount.place_forget()
+            self.submitButton.place_forget()
+        except:
+            pass
+
+    def remove_change_pin(self):
+        try:
+            self.old.place_forget()
+            self.new.place_forget()
+            self.confirm.place_forget()
+            self.submit2.place_forget()
+        except:
+            pass
 
 main = Tk()
 main.title('MGA-Bank')
-main.geometry('700x600')
+window_height = 500
+window_width = 900
+
+screen_width = main.winfo_screenwidth()
+screen_height = main.winfo_screenheight()
+
+x_cordinate = int((screen_width/2) - (window_width/2))
+y_cordinate = int((screen_height/2) - (window_height/2))
+
+main.geometry("{}x{}+{}+{}".format(window_width, window_height, x_cordinate, y_cordinate))
 main.resizable(width=False, height=False)
 icon = PhotoImage(file='bank.png')
 main.tk.call('wm','iconphoto',main._w,icon)
